@@ -87,3 +87,41 @@ for i, file_name in enumerate(file_names):
     shutil.move(source, destination)
 
 print("Images moved successfully!")
+
+
+
+# import os
+# import shutil
+# import random
+
+# # Set the paths for the source and destination directories
+
+# new_dir_test = 'C:/Users/Lucas/PIBIC/new_dir_test'
+
+# # Define the number of images you want to copy for each subfolder
+# train_images_per_subfolder = 100
+# valid_images_per_subfolder = 5
+
+# # Function to copy a specified number of random images from a source folder to a destination folder
+# def copy_images(source_dir, dest_dir, num_images):
+#     if not os.path.exists(dest_dir):
+#         os.makedirs(dest_dir)
+
+#     files = os.listdir(source_dir)
+#     random.shuffle(files)
+#     selected_files = files[:num_images]
+
+#     for file in selected_files:
+#         src_path = os.path.join(source_dir, file)
+#         dest_path = os.path.join(dest_dir, file)
+#         shutil.copy(src_path, dest_path)
+
+# # Loop through subfolders in dir_train and dir_valid
+# for subfolder in os.listdir(dir_train):
+#     subfolder_path_train = os.path.join(dir_test, subfolder)
+
+#     # Copy images from dir_train to new_dir_test
+#     copy_images(subfolder_path_train, os.path.join(new_dir_test, subfolder), 5)
+
+
+# print("Image copying completed.")
