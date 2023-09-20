@@ -1,6 +1,3 @@
-# For files e data manipulations
-from neuralNetwork import * 
-
 import os                
 import zipfile                
 import shutil            
@@ -35,3 +32,4 @@ from tensorflow.keras.applications import ResNet101
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping
+
