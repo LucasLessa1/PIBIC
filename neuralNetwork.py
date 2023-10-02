@@ -85,7 +85,19 @@ class PreNeuralNetwork():
         plt.legend()
 
         plt.show()
-
+        
+    def train(self, train_data, val_data, epochs, batch_size, early_stop_patience):
+        early_stop_callback = EarlyStopping(monitor='val_loss', patience=early_stop_patience, restore_best_weights=True)
+        
+        self.history = self.model.fit(
+            train_data,
+            validation_data=val_data,
+            epochs=epochs,
+            batch_size=batch_size,
+            callbacks=[early_stop_callback]
+        )
+        
+        return self.history
 
 
 
@@ -97,47 +109,7 @@ class ResNet101Model(PreNeuralNetwork):
         self.model = self.build_model()
         self.metrics_df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss', 'train_accuracy', 'val_accuracy'])
 
-    def build_model(self):
-        base_model = ResNet101(weights='imagenet', include_top=False, input_shape=self.image_shape)
-        for layer in base_model.layers:
-            layer.trainable = False
-        
-        output = base_model.output
-        output = GlobalAveragePooling2D()(base_model.output)
-        output = Dense(1024, activation='relu')(output)
-        output = BatchNormalization()(output)
-        
-        predictions = Dense(self.num_classes, activation='softmax')(output)
-        model = Model(inputs=base_model.input, outputs=predictions)
-        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        return model
-    
-    
-    def train(self, train_data, val_data, epochs, batch_size, early_stop_patience=5):
-        early_stop_callback = EarlyStopping(monitor='val_loss', patience=early_stop_patience, restore_best_weights=True)
-        
-        self.history = self.model.fit(
-            train_data,
-            validation_data=val_data,
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=[early_stop_callback]
-        )
-        
-        return self.history
-
-
-
-
-class EfficientNetModelB7(PreNeuralNetwork):
-    def __init__(self, num_classes, image_shape):
-        # super().__init__(train='', test='', valid='')  # Adjust directories accordingly
-        self.num_classes = num_classes
-        self.image_shape = image_shape
-        self.model = self.build_model()
-        self.metrics_df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss', 'train_accuracy', 'val_accuracy'])
-
-    def build_model(self):
+    def build_model_and_train(self, train_data, val_data, epochs, batch_size, early_stop_patience=20):
         base_model = EfficientNetB7(weights='imagenet', include_top=False, input_shape=self.image_shape)
         
         output = base_model.output
@@ -145,26 +117,45 @@ class EfficientNetModelB7(PreNeuralNetwork):
         output = Dense(1024, activation='relu')(output)
         output = BatchNormalization()(output)
         
-        for layer in base_model.layers[:-5]:
-            layer.trainable = False
             
         predictions = Dense(self.num_classes, activation='softmax')(output)
-        model = Model(inputs=base_model.input, outputs=predictions)
-        model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
-        return model
+        self.model = Model(inputs=base_model.input, outputs=predictions)
+        self.model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+        
+        history = self.train(train_data, val_data, epochs=20, batch_size=batch_size, early_stop_patience=5)
+        return history
     
-    def train(self, train_data, val_data, epochs, batch_size, early_stop_patience=5):
-        early_stop_callback = EarlyStopping(monitor='val_loss', patience=early_stop_patience, restore_best_weights=True)
+    
+
+
+
+
+
+class EfficientNetModelB7(PreNeuralNetwork):
+    def __init__(self, num_classes, image_shape):
+        super().__init__()  # Adjust directories accordingly
+        self.num_classes = num_classes
+        self.image_shape = image_shape
+        self.model = self.build_model()
+        self.metrics_df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss', 'train_accuracy', 'val_accuracy'])
+
+    def build_model_and_train(self, train_data, val_data, epochs, batch_size, early_stop_patience=20):
+        base_model = EfficientNetB7(weights='imagenet', include_top=False, input_shape=self.image_shape)
         
-        self.history = self.model.fit(
-            train_data,
-            validation_data=val_data,
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=[early_stop_callback]
-        )
+        output = base_model.output
+        output = GlobalAveragePooling2D()(base_model.output)
+        output = Dense(1024, activation='relu')(output)
+        output = BatchNormalization()(output)
         
-        return self.history
+            
+        predictions = Dense(self.num_classes, activation='softmax')(output)
+        self.model = Model(inputs=base_model.input, outputs=predictions)
+        self.model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+        
+        history = self.train(train_data, val_data, epochs=20, batch_size=batch_size, early_stop_patience=5)
+        return history
+    
+
 
 
 
@@ -178,34 +169,23 @@ class EfficientNetModelB4(PreNeuralNetwork):
         self.model = self.build_model()
         self.metrics_df = pd.DataFrame(columns=['epoch', 'train_loss', 'val_loss', 'train_accuracy', 'val_accuracy'])
 
-    def build_model(self):
-        base_model = EfficientNetB4(weights='imagenet', include_top=False, input_shape=self.image_shape)
+    def build_model_and_train(self, train_data, val_data, epochs, batch_size, early_stop_patience=20):
+        base_model = EfficientNetB7(weights='imagenet', include_top=False, input_shape=self.image_shape)
         
         output = base_model.output
-        output = GlobalAveragePooling2D()(output)
+        output = GlobalAveragePooling2D()(base_model.output)
         output = Dense(1024, activation='relu')(output)
         output = BatchNormalization()(output)
         
-        for layer in base_model.layers[:-5]:
-            layer.trainable = False
             
         predictions = Dense(self.num_classes, activation='softmax')(output)
-        model = Model(inputs=base_model.input, outputs=predictions)
-        model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
-        return model
+        self.model = Model(inputs=base_model.input, outputs=predictions)
+        self.model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+        
+        history = self.train(train_data, val_data, epochs=20, batch_size=batch_size, early_stop_patience=5)
+        return history
     
-    def train(self, train_data, val_data, epochs, batch_size, early_stop_patience=5):
-        early_stop_callback = EarlyStopping(monitor='val_loss', patience=early_stop_patience, restore_best_weights=True)
-        
-        self.history = self.model.fit(
-            train_data,
-            validation_data=val_data,
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=[early_stop_callback]
-        )
-        
-        return self.history
+
 
 
 print("Working Well")
